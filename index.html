@@ -2,78 +2,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="./node_modules/web3/dist/web3.js"></script>
-    
+	<script src="web3.min.js"></script>
+	<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>	
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="app.js"></script>
+  
     <title>Document</title>
 </head>
 <body>
 
 	<button id="retreive">Retreive</button>
 	<button id="store">Store</button>
+	<button id="deploy">Deploy</button>
 	<input id="input" type="number">
 
 	<label id="label" for=""></label>
     
-	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-
-    <script>
-        if (typeof web3 !== 'undefined') {
-            web3 = new Web3(web3.currentProvider);
-        } else {
-        // If no injected web3 instance is detected, fallback to the TestRPC.
-            web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:7545'));
-        }
-
-        web3.eth.defaultAccount = web3.eth.accounts[0];
-
-		console.log(web3.eth.defaultAccount);
-
-        var contract = new web3.eth.Contract([
-	{
-		"inputs": [],
-		"name": "retreive",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "num",
-				"type": "uint256"
-			}
-		],
-		"name": "store",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	}
-        ], '0xa36fCEf4f3Cd49300cfCA8641D5362DABB86F2C7');
-
-
-        $("#retreive").click(function() {
-			contract.methods.retreive().call(function(error, result) {
-				if(!error) {
-					console.log(result);
-					$("#label").text(result);
-				}
-			});
-		});
-
-		$("#store").click(function() {
-			if($("#input").val() != null) {
-				contract.methods.store(parseInt($("#input").val())).send({from: '0x874f95bFF36720d90221A2DD323E259F431C8e14'});
-				$("#input").val("");
-			}
-		});
-
-    </script>
+ 
 </body>
 </html>
