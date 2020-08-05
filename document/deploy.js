@@ -97,9 +97,10 @@ class Deploy extends React.Component {
             if (!$("#numFirme").val() || $("#numFirme").val() == 0) {
                 alert("Inserire un valore diverso da 0")
             } else {
+                console.log(that.state.url)
                 window.deploy = window.contract.deploy({
                     data: '0x' + window.bytecode,
-                    arguments: [parseInt($("#numFirme").val())]
+                    arguments: [parseInt($("#numFirme").val()), that.state.url]
                 }).send({
                     from: window.account[0],
                     gas: 1000000 ,
@@ -131,29 +132,37 @@ class Deploy extends React.Component {
         startSetup() {
             var that = this;
             window.contract.methods.startSetup().send({from: window.account[0]})
-            .then(function(result){ 
+            .then(function(result){
                 that.getStatus();
             });
+        }
+
+        getStatus() {
+            var that = this;
+            window.contract.methods.getStatus().call(function(error, result) {
+                if(!error) {
+                    that.setState({ status: stage[result] })
+                    return result;
+                }
+            })
         }
 
         setUrl() {
             this.setState({url: $("#url").val()})
             var that = this;
             console.log(that.state.url)
-            /*$.ajax({
-                url: that.state.url,
-                type: 'GET',
-                success: function (result) {
-                     alert("SUCCESS");
-                },
-                async: false
-            });
-    
-    
-            sha1('Message to hash');*/
+
         }
 
 render() {
+
+    var href = (this.state.status == Status.SETUP) ? ("app.html?contract=") : "#";
+    var disabled = "ui disabled input";
+    if(href != "#") {
+        href += this.state.contractAddress;
+        disabled = "";
+    }
+
     return (
         <div className="ui segment">
             <div className="ui two column very relaxed grid">
@@ -167,7 +176,7 @@ render() {
                             <button type="button" className="ui button"  onClick={this.deploy.bind(this)}>Deploy</button>
                         </div>
                         <div className="field">
-                            <a href={"app.html?contract=" + this.state.contractAddress }>Clicca qui per interagire con il contratto {this.state.contractAddress}</a>
+                            <a className={disabled} href={href} >Clicca qui per interagire con il contratto {this.state.contractAddress}</a>
                         </div>
                     </form>
                 </div>

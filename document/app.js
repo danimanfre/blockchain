@@ -28,7 +28,8 @@ class App extends React.Component {
         document: "",
         isAbsoluteApproved: false,
         isRelativeApproved: false,
-        isApproved: false}
+        isApproved: false
+    }
 
     constructor(props) {
         super(props);
@@ -39,9 +40,28 @@ class App extends React.Component {
         
         console.log(this.contractAddress);
 
+        // get json ABI and create contract
+        var that = this;
+        $.get("../bin/document/Document.abi", function(data) {
+            window.abi = JSON.parse(data);
+            window.contract = new myWeb3.eth.Contract(window.abi,  {
+                from: window.account, // default from address
+                gasPrice: '20000000000' // default gas price in wei, 20 gwei in this case
+            });
+            window.contract.options.address = that.contractAddress;
+        })
+
+        // get bytecode of contract
+        $.get("../bin/document/Document.bin", function(data) {
+            window.bytecode = data;
+        });
+
+        
+
     }
 
     async componentDidMount() {
+        var that = this;
         if (window.ethereum) {
 
             window.myWeb3 = new Web3(window.ethereum);
@@ -76,7 +96,27 @@ class App extends React.Component {
             });
           })
 
-        window.contract.options.address = this.state.contractAddress;
+        console.log(window.contract.options.address)
+        if(window.contract.options.address != null) {
+            console.log("entro")
+            window.contract.methods.getStatus().call(function(error, result) {
+                if(!error) {
+                    if(that.state.status != result) {
+                        that.setState({ status: stage[result] })
+                    }
+                    return result;
+                }
+            })
+
+            window.contract.methods.getUrl().call(function(error, result) {
+                if(!error) {
+                    if(that.state.status != result) {
+                        that.setState({ url: result })
+                    }
+                    return result;
+                }
+            })
+        }
 
         this.interval = setInterval(() => this.setState({ time: Date.now() }), 10000);
         
@@ -90,10 +130,6 @@ class App extends React.Component {
 
     componentWillUpdate(nextProps, nextState) {
         var that = this;
-        /*this.getNumOfAbstained.bind(this);
-        this.getNumOfOpposed.bind(this);
-        this.getNumOfSignatures.bind(this);
-        this.getStatus;*/
         if(window.contract.options.address != null) {
             window.contract.methods.getStatus().call(function(error, result) {
                 if(!error) {
@@ -366,7 +402,7 @@ class App extends React.Component {
                 <div className="ui two column very relaxed grid">
                     <div className="column">
                         <h1 className="ui huge header">Approvazione Documento</h1>
-                        <label id="document">{this.state.document}</label>
+                        <label id="document">{this.state.contractAddress}</label>
                         <form className="ui form">
 
                             <div className="field">

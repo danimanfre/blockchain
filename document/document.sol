@@ -25,7 +25,7 @@ contract Document {
 
     mapping(address => Signatory) public signatories;
 
-    constructor(uint signatures) public {
+    constructor(uint signatures, string memory url) public {
         holder = msg.sender;
         signatories[holder].rightToSign = true;
 
@@ -35,11 +35,15 @@ contract Document {
 
         numSignatures = 0;
 
-        // documentHash = ?
+        documentHash = url;
     }
 
     function getStatus() public view returns (Status) {
         return currentStatus;
+    }
+
+    function getUrl() public view returns (string memory) {
+        return documentHash;
     }
 
     function startSetup() public returns (bool) {
