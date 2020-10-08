@@ -5,6 +5,38 @@ const Status = {
     FINISH: "finish"
 }
 
+function showIPFSImage() {
+    console.log("funzione chiamata");
+    // Create the IPFS node instance
+    const node = Ipfs.create();
+    console.log(node);
+  
+    // prepare the node
+    /*node.on('ready', () => {
+      // cat to get the image from IPFS, beware it will take a few seconds
+      // And you may need to keep that image ready on a small droplet server that will serve as a sort of CDN to your IPFS content
+      // if no other node in the IPFS network has it
+      node.files.cat('QmaGKQHKGWe2xsjF7x6djTxB7tt5kyFG9LPLPXUd2c4Nxq', function (err, file) {
+        if (err) {
+          throw err
+        }
+  
+        // converting the received data into an "image"
+        var bytes = new Uint8Array(file);
+  
+        var image = document.getElementById('IdOfImage'); // IdOfImage is the id attribute of the img tag in your html page
+        image.src = "data:image/png;base64," + encode(bytes);  
+  
+      })
+  
+      // You may need to stop your node if it became unnecessary
+      //node.stop(() => {
+        // node is now 'offline'
+      //})
+    })*/
+  }
+  
+
 const stage = ["deploy", "setup", "approval", "finish"];
 
 class Deploy extends React.Component {
@@ -27,7 +59,7 @@ class Deploy extends React.Component {
 
         constructor(props) {
             super(props);
-    
+            
             // get json ABI and create contract
             $.get("../bin/document/Document.abi", function(data) {
                 window.abi = JSON.parse(data);
@@ -41,6 +73,7 @@ class Deploy extends React.Component {
             $.get("../bin/document/Document.bin", function(data) {
                 window.bytecode = data;
             });
+            $('#ipfs').onclick = showIPFSImage();
     
         }
 
