@@ -19,7 +19,8 @@ const stage = ["deploy", "setup", "approval", "finish"];
 class Deploy extends React.Component {
 
     state = {
-        url: "",
+        url: "http://localhost:8080/ipfs/",
+        hash: "",
         blocking: true,
         contractAddress: "",
         time: new Date(),
@@ -130,6 +131,31 @@ class Deploy extends React.Component {
             }
         }
 
+        upload() {
+            const file = document.getElementById("textupload").files[0];
+            console.log(file)
+
+            // set the new file name uploaded
+            document.getElementById('fileName').innerText = file.name;
+            var that = this;
+
+            $('.ui.basic.modal').modal({
+                onApprove: async function (e) {
+                    const hash = await ipfs.add(file, (err, res) => {
+                        if (err) {
+                        console.log('ipfs add error')
+                        } else {
+                            console.log(res);
+                        }
+                    });
+                    console.log(hash.path);
+                    that.setHash(hash.path);
+                    that.setUrl();
+                    
+                },
+            }).modal('show');
+        }
+
         connectToContract(e) {
             window.contract.options.address = $("#address").val();
             console.log(window.contract.options.address)
@@ -158,15 +184,22 @@ class Deploy extends React.Component {
         }
 
         setUrl() {
-            this.setState({url: $("#url").val()})
-            var that = this;
-            console.log(that.state.url)
+            this.setState({url: "http://localhost:8080/ipfs/"});
+            console.log(this.state.url + this.state.hash);
+            
+        }
 
+        setHash(hash) {
+            this.setState({hash: hash});
         }
 
 render() {
 
     var href = (this.state.status == Status.SETUP) ? ("app.html?contract=") : "#";
+    var disabledDoc = "ui disabled input";
+    if(this.state.hash) {
+        disabledDoc = "";
+    }
     var disabled = "ui disabled input";
     if(href != "#") {
         href += this.state.contractAddress;
@@ -183,7 +216,7 @@ render() {
                         <div className="field">
                             <label>Selezionare il numero di firme richieste:</label>
                             <input id="numFirme" type="number"/>
-                            <button type="button" className="ui button"  onClick={this.deploy.bind(this)}>Deploy</button>
+                            <button type="button" className="ui button" onClick={this.deploy.bind(this)}>Deploy</button>
                         </div>
                         <div className="field">
                             <a className={disabled} href={href} >Clicca qui per interagire con il contratto {this.state.contractAddress}</a>
@@ -192,7 +225,7 @@ render() {
                 </div>
                 <div className="ui basic modal">
                     <div className="ui icon header">
-                        <i class="cloud upload icon"></i>
+                        <i className="cloud upload icon"></i>
                         Caricamento del file
                     </div>
                     <div className="content centered">
@@ -218,18 +251,13 @@ render() {
                             <i  className="file icon"></i>
                             Seleziona il file
                         </label>
-                        <input type="file" id="textupload" className="ui file input"/>
+                        <input type="file" id="textupload" onChange={this.upload.bind(this)} className="ui file input"/>
                     </form>
-
-                        <div className="ui input">
-                            <label>Selezionare l'url del file:</label>
-                            <input id="url" type="text" />
-                            <button type="button" className="ui button" disabled={!(this.state.status == Status.DEPLOY)} onClick={this.setUrl.bind(this)}>Conferma</button>
-                        </div>
-                        <iframe src={this.state.url} width="600" height="600" scrolling="auto" frameBorder="1">
+                        <iframe src={this.state.url + this.state.hash} width="600" height="600" scrolling="auto" frameBorder="1">
                             La pagina corrente utilizza i frame. Questa caratteristica non è supportata dal browser in uso.
                             <a href="pagina1.htm">Clicca qui</a>
                         </iframe>
+                        <a href={this.state.url + this.state.hash} className={disabledDoc}>Apri il documento</a>
                     </div>
             </div>
             
@@ -239,22 +267,9 @@ render() {
         </div>
         
       );
+      
     }
 };
 
-
 ReactDOM.render(<Deploy/>, document.getElementById('root'));
-
-document.getElementById("textupload").addEventListener('change', function(event) {
-    const myInput = event.target;
-    const file = myInput.files[0];
-
-    // set the new file name uploaded
-    document.getElementById('fileName').innerText = file.name;
-
-    $('.ui.basic.modal').modal({
-        onApprove: function (e) {
-            // do stuff
-        },
-      }).modal('show');
-})
+var ipfs = IpfsHttpClient('/ip4/127.0.0.1/tcp/5001')
