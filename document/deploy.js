@@ -11,30 +11,7 @@ function showIPFSImage() {
     const node = Ipfs.create();
     console.log(node);
   
-    // prepare the node
-    /*node.on('ready', () => {
-      // cat to get the image from IPFS, beware it will take a few seconds
-      // And you may need to keep that image ready on a small droplet server that will serve as a sort of CDN to your IPFS content
-      // if no other node in the IPFS network has it
-      node.files.cat('QmaGKQHKGWe2xsjF7x6djTxB7tt5kyFG9LPLPXUd2c4Nxq', function (err, file) {
-        if (err) {
-          throw err
-        }
-  
-        // converting the received data into an "image"
-        var bytes = new Uint8Array(file);
-  
-        var image = document.getElementById('IdOfImage'); // IdOfImage is the id attribute of the img tag in your html page
-        image.src = "data:image/png;base64," + encode(bytes);  
-  
-      })
-  
-      // You may need to stop your node if it became unnecessary
-      //node.stop(() => {
-        // node is now 'offline'
-      //})
-    })*/
-  }
+}
   
 
 const stage = ["deploy", "setup", "approval", "finish"];
@@ -42,7 +19,7 @@ const stage = ["deploy", "setup", "approval", "finish"];
 class Deploy extends React.Component {
 
     state = {
-        url: "https://www.solidrules.com/portal/it/assets/media/Brochure_it/solidrules_it.pdf",
+        url: "",
         blocking: true,
         contractAddress: "",
         time: new Date(),
@@ -213,12 +190,42 @@ render() {
                         </div>
                     </form>
                 </div>
+                <div className="ui basic modal">
+                    <div className="ui icon header">
+                        <i class="cloud upload icon"></i>
+                        Caricamento del file
+                    </div>
+                    <div className="content centered">
+                        <p>Confermare di voler caricare il file su IPFS?</p>
+                    </div>
+                    <div className="actions centered">
+                        <div className="ui red basic cancel inverted button">
+                            <i className="remove icon"></i>
+                            No
+                        </div>
+                        <div className="ui green ok inverted button">
+                            <i className="checkmark icon"></i>
+                            Yes
+                        </div>
+                    </div>
+                </div>
                 <div className="column">
+                    <h2 className="ui header">
+                        Carica il file su un File System decentralizzato - IPFS
+                    </h2>
+                    <form className="ui form">
+                        <label id="fileName" htmlFor="textupload" className="ui icon button">
+                            <i  className="file icon"></i>
+                            Seleziona il file
+                        </label>
+                        <input type="file" id="textupload" className="ui file input"/>
+                    </form>
+
                         <div className="ui input">
-                                <label>Selezionare l'url del file:</label>
-                                <input id="url" type="text" />
-                                <button type="button" className="ui button" disabled={!(this.state.status == Status.DEPLOY)} onClick={this.setUrl.bind(this)}>Conferma</button>
-                            </div>
+                            <label>Selezionare l'url del file:</label>
+                            <input id="url" type="text" />
+                            <button type="button" className="ui button" disabled={!(this.state.status == Status.DEPLOY)} onClick={this.setUrl.bind(this)}>Conferma</button>
+                        </div>
                         <iframe src={this.state.url} width="600" height="600" scrolling="auto" frameBorder="1">
                             La pagina corrente utilizza i frame. Questa caratteristica non è supportata dal browser in uso.
                             <a href="pagina1.htm">Clicca qui</a>
@@ -229,10 +236,25 @@ render() {
             <div className="ui vertical divider">
                 {"->"}
             </div>
-        </div> 
+        </div>
+        
       );
     }
 };
 
 
 ReactDOM.render(<Deploy/>, document.getElementById('root'));
+
+document.getElementById("textupload").addEventListener('change', function(event) {
+    const myInput = event.target;
+    const file = myInput.files[0];
+
+    // set the new file name uploaded
+    document.getElementById('fileName').innerText = file.name;
+
+    $('.ui.basic.modal').modal({
+        onApprove: function (e) {
+            // do stuff
+        },
+      }).modal('show');
+})
