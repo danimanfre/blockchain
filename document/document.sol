@@ -1,4 +1,4 @@
-pragma solidity ^0.6.9;
+pragma solidity 0.7.0;
 
 /// @title Document verification.
 
@@ -25,21 +25,25 @@ contract Document {
 
     mapping(address => Signatory) public signatories;
 
-    constructor(uint signatures, string memory url) public {
+    constructor(uint signatures, string memory docHash) public {
         holder = msg.sender;
-        signatories[holder].rightToSign = true;
+        //signatories[holder].rightToSign = true;
 
         requiredSignatures = signatures;
 
-        numSignatories = 1;
+        numSignatories = 0;
 
         numSignatures = 0;
 
-        documentHash = url;
+        documentHash = docHash;
     }
 
     function getStatus() public view returns (Status) {
         return currentStatus;
+    }
+
+    function getDocumentHash() public view returns (string memory) {
+        return documentHash;
     }
 
     function getUrl() public view returns (string memory) {

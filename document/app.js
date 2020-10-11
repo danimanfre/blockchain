@@ -16,6 +16,7 @@ class App extends React.Component {
 
     state = {
         url: "https://www.solidrules.com/portal/it/assets/media/Brochure_it/solidrules_it.pdf",
+        hash: "",
         blocking: true,
         contractAddress: "",
         time: new Date(),
@@ -480,7 +481,7 @@ class App extends React.Component {
                                 <input id="url" type="text" />
                                 <button type="button" className="ui button" disabled={!(this.state.status == Status.DEPLOY)} onClick={this.setUrl.bind(this)}>Conferma</button>
                             </div>
-                        <iframe src={this.state.url} width="600" height="600" scrolling="auto" frameBorder="1">
+                        <iframe src={this.state.url + this.state.hash} width="600" height="600" scrolling="auto" frameBorder="1">
                             La pagina corrente utilizza i frame. Questa caratteristica non è supportata dal browser in uso.
                             <a href="pagina1.htm">Clicca qui</a>
                         </iframe>

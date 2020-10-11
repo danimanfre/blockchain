@@ -19,7 +19,7 @@ const stage = ["deploy", "setup", "approval", "finish"];
 class Deploy extends React.Component {
 
     state = {
-        url: "http://localhost:8080/ipfs/",
+        url: "",
         hash: "",
         blocking: true,
         contractAddress: "",
@@ -99,7 +99,7 @@ class Deploy extends React.Component {
         }
 
         deploy() {
-            if(!this.state.url) {
+            if(!this.state.hash) {
                 alert("Inserire prima un documento da approvare")
                 return
             }
