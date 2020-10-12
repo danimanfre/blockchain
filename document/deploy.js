@@ -111,7 +111,7 @@ class Deploy extends React.Component {
                 console.log(that.state.url)
                 window.deploy = window.contract.deploy({
                     data: '0x' + window.bytecode,
-                    arguments: [parseInt($("#numFirme").val()), that.state.url]
+                    arguments: [parseInt($("#numFirme").val()), that.state.hash]
                 }).send({
                     from: window.account[0],
                     gas: 1000000 ,
@@ -185,8 +185,6 @@ class Deploy extends React.Component {
 
         setUrl() {
             this.setState({url: "http://localhost:8080/ipfs/"});
-            console.log(this.state.url + this.state.hash);
-            
         }
 
         setHash(hash) {

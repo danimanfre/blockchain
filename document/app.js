@@ -15,7 +15,7 @@ const stage = ["deploy", "setup", "approval", "finish"];
 class App extends React.Component {
 
     state = {
-        url: "https://www.solidrules.com/portal/it/assets/media/Brochure_it/solidrules_it.pdf",
+        url: "http://localhost:8080/ipfs/",
         hash: "",
         blocking: true,
         contractAddress: "",
@@ -112,9 +112,17 @@ class App extends React.Component {
             window.contract.methods.getUrl().call(function(error, result) {
                 if(!error) {
                     if(that.state.status != result) {
-                        that.setState({ url: result })
+                        console.log(result)
+                        //that.setState({ url: result })
                     }
                     return result;
+                }
+            })
+
+            window.contract.methods.getDocumentHash().call(function(error, result) {
+                if(!error) {
+                    console.log(result);
+                    that.setState({hash: result});
                 }
             })
         }
@@ -238,6 +246,8 @@ class App extends React.Component {
         window.contract.options.address = $("#address").val();
         console.log(window.contract.options.address)
         this.setState({ document: $("#address").val()})
+        this.setUrl();
+        this.setHash();
         this.getNumOfSignatures();
         this.getNumOfOpposed();
         this.getNumOfAbstained();
@@ -381,21 +391,19 @@ class App extends React.Component {
     }
 
     setUrl() {
-        this.setState({url: $("#url").val()})
-        var that = this;
-        console.log(that.state.url)
-        /*$.ajax({
-            url: that.state.url,
-            type: 'GET',
-            success: function (result) {
-                 alert("SUCCESS");
-            },
-            async: false
-        });
-
-
-        sha1('Message to hash');*/
+        this.setState({url: "http://localhost:8080/ipfs/"});
     }
+
+    setHash() {
+        var that = this;
+        window.contract.methods.getDocumentHash().call(function(error, result) {
+            if(!error) {
+                console.log(that.state.url);
+                that.setState({hash: result});
+            }
+        })
+    }
+       
 
     render() {
         return (
