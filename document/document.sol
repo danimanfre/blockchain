@@ -7,6 +7,7 @@ contract Document {
     uint numSignatures;
     uint numSignatories;
     uint numOpposed;
+    uint numAbstained;
     string documentHash;
     uint requiredSignatures;
 
@@ -105,6 +106,17 @@ contract Document {
         numSignatures += 1;
     }
 
+    function abstain() public {
+        Signatory storage signatory = signatories[msg.sender];
+        require(currentStatus == Status.Approval, "The approval is not started yet.");
+        require(!signatory.sign, "Already sign.");
+        require(signatory.rightToSign, "No rigt to sign.");
+        signatory.sign = true;
+
+        signatory.approve = false;
+        numAbstained += 1;
+    }
+
     function refuse() public {
     Signatory storage signatory = signatories[msg.sender];
     require(currentStatus == Status.Approval, "The approval is not started yet.");
@@ -117,7 +129,11 @@ contract Document {
     }
 
     function getNumOfAbstained() public view returns (uint) {
-        return (numSignatories - numSignatures - numOpposed);
+        return (numAbstained);
+    }
+
+    function getNumOfUndecided() public view returns (uint) {
+        return (numSignatories - numSignatures - numOpposed - numAbstained);
     }
 
     function getNumOfOpposed() public view returns (uint) {

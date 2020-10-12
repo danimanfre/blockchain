@@ -1,8 +1,6 @@
-
-
 'use strict';
 
-
+// document validation phases
 const Status = {
     DEPLOY: "deploy",
     SETUP: "setup",
@@ -10,10 +8,12 @@ const Status = {
     FINISH: "finish"
 }
 
+// array of possible stages
 const stage = ["deploy", "setup", "approval", "finish"];
 
 class App extends React.Component {
 
+    // react states
     state = {
         url: "http://localhost:8080/ipfs/",
         hash: "",
@@ -21,6 +21,7 @@ class App extends React.Component {
         contractAddress: "",
         time: new Date(),
         count: 0,
+        undecided: 0,
         approved: 0,
         opposed: 0,
         abstained: 0,
@@ -35,6 +36,7 @@ class App extends React.Component {
     constructor(props) {
         super(props);
 
+        // get value of GET method from url
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
         this.contractAddress = urlParams.get('contract');
@@ -167,6 +169,15 @@ class App extends React.Component {
                     return result;
                 }
             });
+
+            window.contract.methods.getNumOfUndecided().call(function(error, result) {
+                if(!error) {
+                    if(that.state.undecided != result) {
+                        that.setState({ undecided: result })
+                    }
+                    return result;
+                }
+            });
             
             window.contract.methods.getNumOfAbstained().call(function(error, result) {
                 if(!error) {
@@ -202,46 +213,11 @@ class App extends React.Component {
                         }
                     }
                 });
-            }
-        
-            
-        }
-
-        
+            }        
+        }    
     }
 
-    deploy() {
-        if(!this.state.url) {
-            alert("Inserire prima un documento da approvare")
-            return
-        }
-        setAccount();
-        var that = this;
-        if (!$("#numFirme").val() || $("#numFirme").val() == 0) {
-            alert("Inserire un valore diverso da 0")
-        } else {
-            window.deploy = window.contract.deploy({
-                data: '0x' + window.bytecode,
-                arguments: [parseInt($("#numFirme").val())]
-            }).send({
-                from: window.account[0],
-                gas: 1000000 ,
-                gasPrice: '5000000',
-            }).on('error', function(error) { 
-                console.log("error" + error) 
-            }).then(function(newContractInstance){
-                console.log(newContractInstance.options.address) // instance with the new contract address
-                window.contract.options.address = newContractInstance.options.address;
-                window.contract.options.gasPrice = '5000000'; // default gas price in wei
-                window.contract.options.gas = 5000000; // provide as fallback always 5M gas
-                window.contract.options.data = '0x' + window.bytecode;
-                that.setState({ document: newContractInstance.options.address})
-                that.startSetup();
-            });
-            $("#numFirme").val("");
-        }
-    }
-
+    
     connectToContract(e) {
         window.contract.options.address = $("#address").val();
         console.log(window.contract.options.address)
@@ -256,18 +232,20 @@ class App extends React.Component {
 
     }
 
-    
-    async sign() {
-        await setAccount();
+    // accept to refuse the document
+    sign() {
+        setAccount();
         var that = this;
         var numFirm;
         window.contract.methods.sign().send({from: window.account[0]})
         .then(function(result){
             that.getNumOfSignatures();
             that.getNumOfAbstained();
+            that.getNumOfUndecided();
         });
     }
 
+    // refuse to approve the document
     refuse() {
         setAccount();
         var that = this;
@@ -275,6 +253,18 @@ class App extends React.Component {
         .then(function(result){ 
             that.getNumOfOpposed();
             that.getNumOfAbstained();
+            that.getNumOfUndecided();
+        })
+    }
+
+    abstain() {
+        setAccount();
+        var that = this;
+        window.contract.methods.abstain().send({from: window.account[0]})
+        .then(function(result){ 
+            that.getNumOfOpposed();
+            that.getNumOfAbstained();
+            that.getNumOfUndecided();
         })
     }
 
@@ -299,6 +289,19 @@ class App extends React.Component {
             }
         });
     }
+    
+    getNumOfUndecided() {
+        setAccount();
+        var that = this;
+        window.contract.methods.getNumOfUndecided().call(function(error, result) {
+            if(!error) {
+                if(that.state.undecided != result) {
+                    that.setState({ undecided: result })
+                }
+                return result;
+            }
+        });
+    }
 
     getNumOfAbstained() {
         setAccount();
@@ -311,23 +314,13 @@ class App extends React.Component {
         });
     }
 
-    isDocumentApproved() {
-        setAccount();
-        window.contract.methods.isDocumentApproved().call(function(error, result) {
-            if(!error && result) {
-                alert("Il contratto è approvato.");
-            } else {
-                alert("Il contratto non approvato.");
-            }
-        });
-    }
-
     async giveRightToSign() {
         await setAccount();
         window.contract.methods.giveRightToSign($("#rightToSign").val()).send({from: window.account[0]});
         $("#rightToSign").val("");
     }
 
+    // start document approvation
     startApproval() {
         setAccount();
         var that = this;
@@ -340,6 +333,7 @@ class App extends React.Component {
         });
     }
 
+    // start document setup
     startSetup() {
         setAccount();
         var that = this;
@@ -349,6 +343,7 @@ class App extends React.Component {
         });
     }
 
+    // terminate document approvation
     endApproval() {
         setAccount();
         var that = this;
@@ -359,6 +354,7 @@ class App extends React.Component {
         });
     }
 
+    // get the current status of contract
     getStatus() {
         var that = this;
         window.contract.methods.getStatus().call(function(error, result) {
@@ -369,6 +365,7 @@ class App extends React.Component {
         })
     }
 
+    // check document approvation 
     getResult() {
         var that = this;
         window.contract.methods.isDocumentApproved().call(function(error, result) {
@@ -390,10 +387,12 @@ class App extends React.Component {
         });
     }
 
+    // set the url of own ipfs file system
     setUrl() {
         this.setState({url: "http://localhost:8080/ipfs/"});
     }
 
+    // set the hash of file to retrieve from ipfs
     setHash() {
         var that = this;
         window.contract.methods.getDocumentHash().call(function(error, result) {
@@ -423,6 +422,7 @@ class App extends React.Component {
                             <div className="field">
                                 <label>Azioni:</label>
                                 <button type="button" className="ui positive button" disabled={!(this.state.status == Status.APPROVAL)} onClick={this.sign.bind(this)}>Firma</button>
+                                <button type="button" className="ui button" disabled={!(this.state.status == Status.APPROVAL)} onClick={this.abstain.bind(this)}>Astieniti</button>
                                 <button type="button" className="ui negative  button" disabled={!(this.state.status == Status.APPROVAL)} onClick={this.refuse.bind(this)}>Rifiuta</button>
                             </div>
 
@@ -433,6 +433,7 @@ class App extends React.Component {
                                         <tr>
                                             <th>Favorevoli</th>
                                             <th>Contrari</th>
+                                            <th>Astenuti</th>
                                             <th>In attesa</th>
                                             <th>Totale</th>
                                         </tr>
@@ -441,8 +442,9 @@ class App extends React.Component {
                                         <tr>
                                             <td data-label="Favorevoli">{this.state.count}</td>
                                             <td data-label="Contrari">{this.state.opposed}</td>
-                                            <td data-label="In attesa">{this.state.abstained}</td>
-                                            <td data-label="Totale">{parseInt(this.state.count) + parseInt(this.state.opposed) + parseInt(this.state.abstained)}</td>
+                                            <td data-label="Astenuti">{this.state.abstained}</td>
+                                            <td data-label="In attesa">{this.state.undecided}</td>
+                                            <td data-label="Totale">{parseInt(this.state.count) + parseInt(this.state.opposed) + parseInt(this.state.abstained) + parseInt(this.state.undecided)}</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -484,11 +486,6 @@ class App extends React.Component {
                     </div>
                 
                     <div className="column">
-                        <div className="ui input">
-                                <label>Selezionare l'url del file:</label>
-                                <input id="url" type="text" />
-                                <button type="button" className="ui button" disabled={!(this.state.status == Status.DEPLOY)} onClick={this.setUrl.bind(this)}>Conferma</button>
-                            </div>
                         <iframe src={this.state.url + this.state.hash} width="600" height="600" scrolling="auto" frameBorder="1">
                             La pagina corrente utilizza i frame. Questa caratteristica non è supportata dal browser in uso.
                             <a href="pagina1.htm">Clicca qui</a>

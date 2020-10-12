@@ -1,23 +1,19 @@
+'use strict';
+
+// document validation phases
 const Status = {
     DEPLOY: "deploy",
     SETUP: "setup",
     APPROVAL: "approval",
     FINISH: "finish"
-}
+}  
 
-function showIPFSImage() {
-    console.log("funzione chiamata");
-    // Create the IPFS node instance
-    const node = Ipfs.create();
-    console.log(node);
-  
-}
-  
-
+// array of possible stages
 const stage = ["deploy", "setup", "approval", "finish"];
 
 class Deploy extends React.Component {
-
+    
+    // react states
     state = {
         url: "",
         hash: "",
@@ -51,8 +47,6 @@ class Deploy extends React.Component {
             $.get("../bin/document/Document.bin", function(data) {
                 window.bytecode = data;
             });
-            $('#ipfs').onclick = showIPFSImage();
-    
         }
 
         async componentDidMount() {
@@ -79,7 +73,7 @@ class Deploy extends React.Component {
             }
         
         
-            // set the account
+            // set the account from metamask
             web3.eth.getAccounts(function (error, result) {
                 window.account = result;
             });
@@ -89,7 +83,7 @@ class Deploy extends React.Component {
                     window.account = result;
                 });
               })
-    
+            // refresh react components
             this.interval = setInterval(() => this.setState({ time: Date.now() }), 10000);
             
         }
@@ -97,18 +91,18 @@ class Deploy extends React.Component {
         componentWillUnmount() {
             clearInterval(this.interval);
         }
-
+        // deploy a contract
         deploy() {
+            // check if a document is uploaded
             if(!this.state.hash) {
                 alert("Inserire prima un documento da approvare")
                 return
             }
-            //setAccount();
             var that = this;
+            // check if the number of signs is valid
             if (!$("#numFirme").val() || $("#numFirme").val() == 0) {
                 alert("Inserire un valore diverso da 0")
             } else {
-                console.log(that.state.url)
                 window.deploy = window.contract.deploy({
                     data: '0x' + window.bytecode,
                     arguments: [parseInt($("#numFirme").val()), that.state.hash]
@@ -119,19 +113,25 @@ class Deploy extends React.Component {
                 }).on('error', function(error) { 
                     console.log("error" + error) 
                 }).then(function(newContractInstance){
-                    console.log(newContractInstance.options.address) // instance with the new contract address
+                    // instance with the new contract address
                     window.contract.options.address = newContractInstance.options.address;
-                    window.contract.options.gasPrice = '5000000'; // default gas price in wei
-                    window.contract.options.gas = 5000000; // provide as fallback always 5M gas
+                    // default gas price in wei
+                    window.contract.options.gasPrice = '5000000';
+                    // provide as fallback always 5M gas
+                    window.contract.options.gas = 5000000;
                     window.contract.options.data = '0x' + window.bytecode;
-                    that.setState({ contractAddress: newContractInstance.options.address})
+                    // set the contract address
+                    that.setState({ contractAddress: newContractInstance.options.address});
                     that.startSetup();
                 });
+                // clear field
                 $("#numFirme").val("");
             }
         }
 
+        // upload the file from file system to ipfs
         upload() {
+            // get the file
             const file = document.getElementById("textupload").files[0];
             console.log(file)
 
@@ -139,6 +139,7 @@ class Deploy extends React.Component {
             document.getElementById('fileName').innerText = file.name;
             var that = this;
 
+            // start modal to confirm the upload
             $('.ui.basic.modal').modal({
                 onApprove: async function (e) {
                     const hash = await ipfs.add(file, (err, res) => {
@@ -148,23 +149,24 @@ class Deploy extends React.Component {
                             console.log(res);
                         }
                     });
-                    console.log(hash.path);
-                    that.setHash(hash.path);
                     that.setUrl();
-                    
+                    that.setHash(hash.path);
                 },
             }).modal('show');
         }
 
-        connectToContract(e) {
+        // connect to the contract 
+        /*connectToContract(e) {
             window.contract.options.address = $("#address").val();
             console.log(window.contract.options.address)
             $("#address").val("");
 
             window.location.href = '../app.html?contract='  +  window.contract.options.address;
     
-        }
+        }*/
 
+        // start the setup of contract. During this phase the owner can give a person the right
+        // to sign.
         startSetup() {
             var that = this;
             window.contract.methods.startSetup().send({from: window.account[0]})
@@ -173,6 +175,7 @@ class Deploy extends React.Component {
             });
         }
 
+        // get the current status of contract
         getStatus() {
             var that = this;
             window.contract.methods.getStatus().call(function(error, result) {
@@ -183,14 +186,17 @@ class Deploy extends React.Component {
             })
         }
 
+        // set the url of own ipfs file system
         setUrl() {
             this.setState({url: "http://localhost:8080/ipfs/"});
         }
 
+        // set hash path of file. This is the unique identifier of the file in ipfs
         setHash(hash) {
             this.setState({hash: hash});
         }
 
+// react render
 render() {
 
     var href = (this.state.status == Status.SETUP) ? ("app.html?contract=") : "#";
@@ -236,7 +242,7 @@ render() {
                         </div>
                         <div className="ui green ok inverted button">
                             <i className="checkmark icon"></i>
-                            Yes
+                            Sì
                         </div>
                     </div>
                 </div>
@@ -270,4 +276,6 @@ render() {
 };
 
 ReactDOM.render(<Deploy/>, document.getElementById('root'));
+
+// connect to ipfs daemon
 var ipfs = IpfsHttpClient('/ip4/127.0.0.1/tcp/5001')
