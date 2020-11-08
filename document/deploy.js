@@ -51,15 +51,10 @@ class Deploy extends React.Component {
 
         async componentDidMount() {
             if (window.ethereum) {
-    
                 window.myWeb3 = new Web3(window.ethereum);
-        
                 var web3 = window.myWeb3;
-        
                 window.ethereum.enable();
                 window.accounts = await web3.eth.getAccounts();
-        
-                console.log( "window.accounts",window.accounts)
             }
             // Legacy dapp browsers...
             else if (window.web3) {
@@ -71,8 +66,6 @@ class Deploy extends React.Component {
             else {
                 console.log('Non-Ethereum browser detected. You should consider trying MetaMask!');
             }
-        
-        
             // set the account from metamask
             web3.eth.getAccounts(function (error, result) {
                 window.account = result;
@@ -193,6 +186,7 @@ class Deploy extends React.Component {
 
         // set hash path of file. This is the unique identifier of the file in ipfs
         setHash(hash) {
+            console.log(hash);
             this.setState({hash: hash});
         }
 

@@ -101,7 +101,6 @@ class App extends React.Component {
 
         console.log(window.contract.options.address)
         if(window.contract.options.address != null) {
-            console.log("entro")
             window.contract.methods.getStatus().call(function(error, result) {
                 if(!error) {
                     if(that.state.status != result) {
@@ -236,7 +235,6 @@ class App extends React.Component {
     sign() {
         setAccount();
         var that = this;
-        var numFirm;
         window.contract.methods.sign().send({from: window.account[0]})
         .then(function(result){
             that.getNumOfSignatures();
@@ -318,6 +316,9 @@ class App extends React.Component {
         await setAccount();
         window.contract.methods.giveRightToSign($("#rightToSign").val()).send({from: window.account[0]});
         $("#rightToSign").val("");
+        this.getNumOfAbstained();
+        this.getNumOfOpposed();
+        this.getNumOfUndecided
     }
 
     // start document approvation

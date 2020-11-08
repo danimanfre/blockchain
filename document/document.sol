@@ -26,9 +26,8 @@ contract Document {
 
     mapping(address => Signatory) public signatories;
 
-    constructor(uint signatures, string memory docHash) public {
+    constructor(uint signatures, string memory docHash)  {
         holder = msg.sender;
-        //signatories[holder].rightToSign = true;
 
         requiredSignatures = signatures;
 
